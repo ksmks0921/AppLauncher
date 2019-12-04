@@ -1,33 +1,20 @@
 package com.yjm.applauncher;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.app.Activity;
-import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
-
 import android.widget.Toast;
 
-
 import com.yjm.applauncher.utilities.Constants;
-
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,6 +25,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        init_ui();
+
+
+
+    }
+
+    private void init_ui(){
         setContentView(R.layout.activity_main);
 
 
@@ -46,11 +42,15 @@ public class MainActivity extends AppCompatActivity {
         set_background_image = (Button) findViewById(R.id.add_background);
         change_password = findViewById(R.id.change_password);
 
+
+
+
+
         add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                intent = new Intent(getApplicationContext(), ListActivity.class);
+                Intent intent = new Intent(getApplicationContext(), ListActivity.class);
                 startActivity(intent);
 
             }
@@ -59,13 +59,33 @@ public class MainActivity extends AppCompatActivity {
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Constants.flag_setting = false;
-//                getPackageManager().clearPackagePreferredActivities(getPackageName());
-//                finish();
-//                Intent intent = new Intent(Intent.ACTION_MAIN);
-//                intent.addCategory(Intent.CATEGORY_HOME);
-//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                startActivity(intent);
+//
+//                PackageManager packageManager = getPackageManager();
+//                Intent i = new Intent();
+//                i.addCategory(Intent.CATEGORY_HOME);
+//                i.setAction(Intent.ACTION_MAIN);
+//                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                i.addCategory(Intent.CATEGORY_MONKEY);
+//                List<ResolveInfo> queryIntentActivities = packageManager
+//                        .queryIntentActivities(i,0);
+//
+//                ResolveInfo resolveInfo = queryIntentActivities.get(0);
+//                String packageName = resolveInfo.activityInfo.packageName;
+//                String className = resolveInfo.activityInfo.targetActivity;
+//
+//                Toast.makeText(getApplicationContext(),packageName, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(),className, Toast.LENGTH_SHORT).show();
+//
+//                if(className != null){
+//                    Intent res = new Intent();
+//
+//                    res.setComponent(new ComponentName(packageName,className));
+//                    startActivity(res);
+//                }
+//                else {
+//                    finish();
+//                }
+
                 resetPreferredLauncherAndOpenChooser(MainActivity.this);
 
             }
@@ -83,12 +103,20 @@ public class MainActivity extends AppCompatActivity {
         change_password.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                intent = new Intent(getApplicationContext(), ChangePasword.class);
+                Intent intent = new Intent(getApplicationContext(), ChangePasword.class);
                 startActivity(intent);
             }
         });
     }
+    private boolean isMyAppLauncherDefault() {
 
+        PackageManager localPackageManager = getPackageManager();
+        Intent intent = new Intent("android.intent.action.MAIN");
+        intent.addCategory("android.intent.category.HOME");
+        String str = localPackageManager.resolveActivity(intent,
+                PackageManager.MATCH_DEFAULT_ONLY).activityInfo.packageName;
+        return str.equals(getPackageName());
+    }
 
     //    protected void onActivityResult(int request)
     public static void resetPreferredLauncherAndOpenChooser(Context context) {
@@ -131,5 +159,11 @@ public class MainActivity extends AppCompatActivity {
             default:
                 break;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
     }
 }

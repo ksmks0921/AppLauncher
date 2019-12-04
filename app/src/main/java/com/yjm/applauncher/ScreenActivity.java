@@ -4,10 +4,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.accessibilityservice.AccessibilityServiceInfo;
+import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -19,6 +23,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.provider.Settings;
 
 import android.util.Log;
@@ -28,6 +33,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 
 import android.view.WindowManager;
+import android.view.accessibility.AccessibilityEvent;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -35,27 +41,44 @@ import android.widget.Toast;
 
 
 import com.yjm.applauncher.Model.AppList;
+import com.yjm.applauncher.Model.UStats;
 import com.yjm.applauncher.R;
+import com.yjm.applauncher.Services.RecentAppBtnService;
 import com.yjm.applauncher.passwordDialog;
 import com.yjm.applauncher.utilities.Constants;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class ScreenActivity extends AppCompatActivity  implements passwordDialog.EnterPasswordListener{
+public class ScreenActivity extends AppCompatActivity implements passwordDialog.EnterPasswordListener{
 
     List<AppList> list_app;
     ArrayList<String> applist;
     RecyclerView recyclerView;
     private LinearLayout main_layout;
     private TextView select_launcher, select_launcher_description;
-//    private ImageView example;
+    private RecentAppBtnService r;
+    private Boolean flag_item_clicked = false;
+    boolean currentFocus;
+
+    // To keep track of activity's foreground/background status
+    boolean isPaused;
+
+    Handler collapseNotificationHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_screen);
+
+//        Intent intent_service= new Intent(this, RecentAppBtnService.class);
+//        bindService(intent_service, ScreenActivity.this, Context.BIND_AUTO_CREATE);
+
 
         recyclerView = (RecyclerView) findViewById(R.id.recyclerview_id);
         main_layout = findViewById(R.id.main_layout);
@@ -67,13 +90,12 @@ public class ScreenActivity extends AppCompatActivity  implements passwordDialog
         select_launcher.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                flag_item_clicked = true;
                 resetPreferredLauncherAndOpenChooser(ScreenActivity.this);
 
 
             }
         });
-
 
         if(Constants.flag_setting == false) {
             Intent intent = new Intent(ScreenActivity.this, MainActivity.class);
@@ -84,6 +106,7 @@ public class ScreenActivity extends AppCompatActivity  implements passwordDialog
         else {
 
             initUI();
+
             if(!isMyAppLauncherDefault()){
                 select_launcher_description.setVisibility(View.VISIBLE);
                 select_launcher.setVisibility(View.VISIBLE);
@@ -96,10 +119,6 @@ public class ScreenActivity extends AppCompatActivity  implements passwordDialog
 
 
         }
-//        Toast.makeText(getApplicationContext(),"sdfsdf__________"+isMyAppLauncherDefault(), Toast.LENGTH_SHORT).show();
-
-
-
 
 
         View decorView = getWindow().getDecorView();
@@ -168,7 +187,7 @@ public class ScreenActivity extends AppCompatActivity  implements passwordDialog
         RecyclerViewAdapter recyclerViewAdapter = new RecyclerViewAdapter(this, list_app, new RecyclerViewAdapter.OnItemClickListener() {
             @Override public void onItemClick(AppList item) {
 
-
+                flag_item_clicked = true;
 
                 Intent intent = getPackageManager()
                         .getLaunchIntentForPackage(item.getPackages());
@@ -229,6 +248,8 @@ public class ScreenActivity extends AppCompatActivity  implements passwordDialog
                                         Toast.makeText(getApplicationContext(), "double", Toast.LENGTH_SHORT).show();
                                     }
                                 }, ViewConfiguration.getDoubleTapTimeout());
+
+
                             }
                     }
 
@@ -250,14 +271,42 @@ public class ScreenActivity extends AppCompatActivity  implements passwordDialog
     }
 
     @Override
-    protected void onRestart() {
-        super.onRestart();
-
-
+    protected void onStart() {
+        super.onStart();
         View decorView = getWindow().getDecorView();
 
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
+
+//        if (r != null) {
+//            Toast.makeText(this, "Now Activity is ___ " + r.getNowActivity(),
+//                    Toast.LENGTH_SHORT).show();
+//
+//        }
+
+
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        flag_item_clicked = false;
+        View decorView = getWindow().getDecorView();
+
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+
+
+        if(!isMyAppLauncherDefault()){
+            select_launcher_description.setVisibility(View.VISIBLE);
+            select_launcher.setVisibility(View.VISIBLE);
+        }
+        else {
+
+            select_launcher_description.setVisibility(View.GONE);
+            select_launcher.setVisibility(View.GONE);
+        }
     }
 
 
@@ -269,17 +318,188 @@ public class ScreenActivity extends AppCompatActivity  implements passwordDialog
 
     @Override
     public void applyTexts(String password) {
-        String saved_password = "password";
-
         if (password.trim().equals(Constants.password)){
             Intent intent = new Intent(ScreenActivity.this, MainActivity.class);
             startActivity(intent);
-
-
         }
         else {
             Toast.makeText(getApplicationContext(),"Wrong password!", Toast.LENGTH_SHORT).show();
         }
     }
+
+
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        if (!hasFocus) {
+            currentFocus = hasFocus;
+            collapseNow();
+//            windowCloseHandler.postDelayed(windowCloserRunnable, 250);
+            if(flag_item_clicked == false ){
+                Toast.makeText(getApplicationContext(),"This Phone is locked!" + "\t" + "\t" + "com.android.systemui"+ "\t" + "com.android.systemui.recents.RecentsActivity", Toast.LENGTH_LONG).show();
+                ActivityManager activityManager = (ActivityManager) getApplicationContext()
+                        .getSystemService(Context.ACTIVITY_SERVICE);
+
+                activityManager.moveTaskToFront(getTaskId(), 0);
+            }
+
+//            Context mContext = ScreenActivity.this;
+//            if (UStats.getUsageStatsList(this).isEmpty()) {
+//                Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+//                startActivity(intent);
+//            }
+//
+//            if(UStats.printUsageStatus(mContext).equals("com.android.systemui")){
+//
+//                    if(UStats.getStats(this).equals("com.android.systemui.recents.RecentsActivity")){
+//                        if(flag_item_clicked == false ){
+//                            Toast.makeText(getApplicationContext(),"This Phone is locked!" + "\t" + "\t" + "com.android.systemui"+ "\t" + "com.android.systemui.recents.RecentsActivity", Toast.LENGTH_LONG).show();
+//                            ActivityManager activityManager = (ActivityManager) getApplicationContext()
+//                                    .getSystemService(Context.ACTIVITY_SERVICE);
+//
+//                            activityManager.moveTaskToFront(getTaskId(), 0);
+//                        }
+//
+//                    }
+//
+//
+//
+//            }
+
+
+
+        }
+    }
+
+//    private void toggleRecents() {
+//        try{
+//            Intent closeRecents = new Intent("com.android.systemui.RecentsComponent");
+//            closeRecents.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+//            ComponentName recents = new ComponentName("com.android.systemui", "com.android.systemui.recents.RecentsActivity");
+//            closeRecents.setComponent(recents);
+//            this.startActivity(closeRecents);
+//        }
+//        catch (Exception e){
+//
+//            Log.d("TAG", "Pkg____)))): " + e + "\t");
+//
+//        }
+//
+//    }
+//
+//    private Handler windowCloseHandler = new Handler();
+//    private Runnable windowCloserRunnable = new Runnable() {
+//        @Override
+//        public void run() {
+//
+//            ActivityManager am = (ActivityManager)getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+//
+//            ComponentName cn = am.getRunningTasks(1).get(0).topActivity;
+//
+//            if (cn != null && cn.getClassName().equals("com.android.systemui.recent.RecentsActivity")) {
+//                toggleRecents();
+//            }
+//            else {
+//                Toast.makeText(ScreenActivity.this, "Now is ___ "+cn.getClassName() , Toast.LENGTH_SHORT).show();
+//
+//            }
+//
+//
+//        }
+//    };
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isPaused = true;
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Activity's been resumed
+        isPaused = false;
+    }
+
+
+    public void collapseNow() {
+
+        // Initialize 'collapseNotificationHandler'
+        if (collapseNotificationHandler == null) {
+            collapseNotificationHandler = new Handler();
+        }
+
+        // If window focus has been lost && activity is not in a paused state
+        // Its a valid check because showing of notification panel
+        // steals the focus from current activity's window, but does not
+        // 'pause' the activity
+        if (!currentFocus && !isPaused) {
+
+            // Post a Runnable with some delay - currently set to 300 ms
+            collapseNotificationHandler.postDelayed(new Runnable() {
+
+                class Method {
+                }
+
+                @Override
+                public void run() {
+
+                    // Use reflection to trigger a method from 'StatusBarManager'
+
+                    @SuppressLint("WrongConstant") Object statusBarService = getSystemService("statusbar");
+                    Class<?> statusBarManager = null;
+
+                    try {
+                        statusBarManager = Class.forName("android.app.StatusBarManager");
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                    java.lang.reflect.Method collapseStatusBar = null;
+
+                    try {
+
+                        // Prior to API 17, the method to call is 'collapse()'
+                        // API 17 onwards, the method to call is `collapsePanels()`
+
+                        if (Build.VERSION.SDK_INT > 16) {
+                            collapseStatusBar = statusBarManager .getMethod("collapsePanels");
+                        } else {
+                            collapseStatusBar = statusBarManager .getMethod("collapse");
+                        }
+                    } catch (NoSuchMethodException e) {
+                        e.printStackTrace();
+                    }
+
+                    collapseStatusBar.setAccessible(true);
+
+                    try {
+                        collapseStatusBar.invoke(statusBarService);
+                    } catch (IllegalArgumentException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+
+                    // Check if the window focus has been returned
+                    // If it hasn't been returned, post this Runnable again
+                    // Currently, the delay is 100 ms. You can change this
+                    // value to suit your needs.
+                    if (!currentFocus && !isPaused) {
+                        collapseNotificationHandler.postDelayed(this, 100L);
+                    }
+
+                }
+            }, 300L);
+        }
+    }
+
+
+
+
 
 }
