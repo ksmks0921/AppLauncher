@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ListActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:id="@+id/main_backgroud">
     <ProgressBar
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

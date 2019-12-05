@@ -1,26 +1,39 @@
 package com.yjm.applauncher;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.yjm.applauncher.utilities.Constants;
+
+import java.io.File;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private Button add, cancel, set_background_image, change_password;
     private Intent intent ;
     private static final int SELECTED_PIC = 1;
+    private LinearLayout background;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         init_ui();
+        background = findViewById(R.id.backgroud);
 
 
 
@@ -94,8 +108,19 @@ public class MainActivity extends AppCompatActivity {
         set_background_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, SELECTED_PIC);
+
+                Toast.makeText(getApplicationContext(),"Now is " + isReadStoragePermissionGranted(), Toast.LENGTH_SHORT).show();
+                if(isReadStoragePermissionGranted()){
+                    Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(intent, SELECTED_PIC);
+                }
+                else {
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[] {
+                                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            }, 3);
+                }
 
             }
         });
@@ -147,10 +172,7 @@ public class MainActivity extends AppCompatActivity {
                     int columnIndex = cursor.getColumnIndex(projection[0]);
                     String filepath = cursor.getString(columnIndex);
                     Constants.Background_file_path = filepath;
-
-
-
-
+                    cursor.close();
 
                 }
                 break;
@@ -165,5 +187,53 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
+    }
+
+    public  boolean isReadStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.v("Tag","Permission is granted1");
+                return true;
+            } else {
+
+                Log.v("Tag","Permission is revoked1");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            Log.v("Tag","Permission is granted1");
+            return true;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 2:
+//                Log.d("TAG", "External storage2");
+//                if(grantResults[0]== PackageManager.PERMISSION_GRANTED){
+//                    Log.v("TAG","Permission: "+permissions[0]+ "was "+grantResults[0]);
+//                    //resume tasks needing this permission
+//                    downloadPdfFile();
+//                }else{
+//                    progress.dismiss();
+//                }
+                break;
+
+            case 3:
+//                Log.d("TAG", "External storage1");
+//                if(grantResults[0]== PackageManager.PERMISSION_GRANTED){
+//                    Log.v("TAG","Permission: "+permissions[0]+ "was "+grantResults[0]);
+//                    //resume tasks needing this permission
+//                    SharePdfFile();
+//                }else{
+//                    progress.dismiss();
+//                }
+                break;
+        }
     }
 }

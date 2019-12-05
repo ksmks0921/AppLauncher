@@ -33,6 +33,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,9 +53,11 @@ public class ListActivity extends AppCompatActivity {
     private List<AppList> installedApps;
     private AppAdapter installedAppAdapter;
     private LinearLayout add_btn;
+    private RelativeLayout main_background;
     private ProgressBar mProgressBar;
     private int mProgressStatus = 0;
     private Handler mHandler = new Handler();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +69,7 @@ public class ListActivity extends AppCompatActivity {
 
         userInstalledApps = (ListView) findViewById(R.id.app_list);
         add_btn = (LinearLayout) findViewById(R.id.add_btn);
+
 
         new Thread(new Runnable() {
             @Override

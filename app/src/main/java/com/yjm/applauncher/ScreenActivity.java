@@ -79,17 +79,16 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_screen);
 
-//        Intent intent_service= new Intent(this, RecentAppBtnService.class);
-//        bindService(intent_service, ScreenActivity.this, Context.BIND_AUTO_CREATE);
-
-
         recyclerView = (RecyclerView) findViewById(R.id.recyclerview_id);
-        main_layout = findViewById(R.id.main_layout);
+
+        main_layout = (LinearLayout) findViewById(R.id.main_layout);
+
         select_launcher = findViewById(R.id.select_launcher);
         select_launcher_description = findViewById(R.id.select_launcher_description);
-        Bitmap bitmap = BitmapFactory.decodeFile(Constants.Background_file_path);
-        Drawable drawable = new BitmapDrawable(bitmap);
-        main_layout.setBackground(drawable);
+
+
+
+
         select_launcher.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -101,8 +100,7 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
 
             }
         });
-//        Toast.makeText(getApplicationContext(),"Now is " + isMyAppLauncherDefault(), Toast.LENGTH_SHORT).show();
-//        Toast.makeText(getApplicationContext(),"Flag is " + Constants.flag_setting, Toast.LENGTH_SHORT).show();
+
         if(Constants.flag_setting == false) {
             Intent intent = new Intent(ScreenActivity.this, MainActivity.class);
             finish();
@@ -125,6 +123,11 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
             }
             initUI();
 
+
+            Bitmap bitmap = BitmapFactory.decodeFile(Constants.Background_file_path);
+            Toast.makeText(getApplicationContext(),"Now is " + Constants.Background_file_path, Toast.LENGTH_SHORT).show();
+            BitmapDrawable drawable = new BitmapDrawable(getResources(),bitmap);
+            main_layout.setBackground(drawable);
 
 
 
@@ -373,6 +376,7 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
     public void applyTexts(String password) {
         if (password.trim().equals(Constants.password)){
             Intent intent = new Intent(ScreenActivity.this, MainActivity.class);
+            finish();
             startActivity(intent);
         }
         else {
