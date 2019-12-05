@@ -5,10 +5,11 @@
 
     <uses-permission android:name="android.permission.REORDER_TASKS" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
-        tools:ignore="ProtectedPermissions" />
-<!--    <uses-permission android:name="android.permission.GET_TASKS" />-->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" /> <!-- <uses-permission android:name="android.permission.GET_TASKS" /> -->
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -16,14 +17,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".LauncherActivity">
+
+        </activity>
+
         <service
             android:name=".Services.RecentAppBtnService"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
+
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
@@ -32,10 +38,10 @@
         <activity android:name=".ChangePasword" />
         <activity
             android:name=".ScreenActivity"
-            android:launchMode="singleTop"
-            android:stateNotNeeded="true"
             android:clearTaskOnLaunch="true"
             android:exported="true"
+            android:launchMode="singleTask"
+            android:stateNotNeeded="true"
             android:theme="@style/NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -43,6 +49,7 @@
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MONKEY" />
             </intent-filter>
         </activity>
         <activity android:name=".ListActivity" />

@@ -7,6 +7,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -32,6 +34,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.ImageView;
@@ -91,12 +94,15 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
             @Override
             public void onClick(View view) {
                 flag_item_clicked = true;
+
                 resetPreferredLauncherAndOpenChooser(ScreenActivity.this);
+
 
 
             }
         });
-
+//        Toast.makeText(getApplicationContext(),"Now is " + isMyAppLauncherDefault(), Toast.LENGTH_SHORT).show();
+//        Toast.makeText(getApplicationContext(),"Flag is " + Constants.flag_setting, Toast.LENGTH_SHORT).show();
         if(Constants.flag_setting == false) {
             Intent intent = new Intent(ScreenActivity.this, MainActivity.class);
             finish();
@@ -105,17 +111,50 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
         }
         else {
 
-            initUI();
+
 
             if(!isMyAppLauncherDefault()){
                 select_launcher_description.setVisibility(View.VISIBLE);
                 select_launcher.setVisibility(View.VISIBLE);
+
             }
             else {
 
                 select_launcher_description.setVisibility(View.GONE);
                 select_launcher.setVisibility(View.GONE);
             }
+            initUI();
+
+
+
+
+//
+//            final Handler h = new Handler();
+//            h.postDelayed(new Runnable()
+//            {
+//                private long time = 0;
+//
+//                @Override
+//                public void run()
+//                {
+//
+//                    if(!isMyAppLauncherDefault()){
+//
+//                    }
+//                    else {
+////                        Toast.makeText(getApplicationContext(),"Deleted!", Toast.LENGTH_SHORT).show();
+//                        View myView = findViewById(R.id.select_launcher);
+//                        ViewGroup parent = (ViewGroup) myView.getParent();
+//                        parent.removeView(myView);
+//                        select_launcher_description.setVisibility(View.GONE);
+//                        select_launcher.setVisibility(View.GONE);
+//                    }
+//
+//
+//
+//                }
+//            }, 1000); // 1 second delay (takes millis)
+
 
 
         }
@@ -149,7 +188,9 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
         selector.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(selector);
 
-        packageManager.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP);
+        packageManager.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+
+
     }
 
 
@@ -259,6 +300,16 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
         }
 
 
+        if(!isMyAppLauncherDefault()){
+            select_launcher_description.setVisibility(View.VISIBLE);
+            select_launcher.setVisibility(View.VISIBLE);
+        }
+        else {
+
+            select_launcher_description.setVisibility(View.GONE);
+            select_launcher.setVisibility(View.GONE);
+        }
+
 
     }
 
@@ -278,13 +329,15 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
 
-//        if (r != null) {
-//            Toast.makeText(this, "Now Activity is ___ " + r.getNowActivity(),
-//                    Toast.LENGTH_SHORT).show();
-//
-//        }
+        if(!isMyAppLauncherDefault()){
+            select_launcher_description.setVisibility(View.VISIBLE);
+            select_launcher.setVisibility(View.VISIBLE);
+        }
+        else {
 
-
+            select_launcher_description.setVisibility(View.GONE);
+            select_launcher.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -338,7 +391,7 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
             collapseNow();
 //            windowCloseHandler.postDelayed(windowCloserRunnable, 250);
             if(flag_item_clicked == false ){
-                Toast.makeText(getApplicationContext(),"This Phone is locked!" + "\t" + "\t" + "com.android.systemui"+ "\t" + "com.android.systemui.recents.RecentsActivity", Toast.LENGTH_LONG).show();
+//                Toast.makeText(getApplicationContext(),"This Phone is locked!" + "\t" + "\t" + "com.android.systemui"+ "\t" + "com.android.systemui.recents.RecentsActivity", Toast.LENGTH_LONG).show();
                 ActivityManager activityManager = (ActivityManager) getApplicationContext()
                         .getSystemService(Context.ACTIVITY_SERVICE);
 
@@ -421,6 +474,18 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
 
         // Activity's been resumed
         isPaused = false;
+        if(!isMyAppLauncherDefault()){
+            select_launcher_description.setVisibility(View.VISIBLE);
+            select_launcher.setVisibility(View.VISIBLE);
+        }
+        else {
+
+            select_launcher_description.setVisibility(View.GONE);
+            select_launcher.setVisibility(View.GONE);
+            flag_item_clicked = false;
+        }
+
+
     }
 
 
@@ -431,10 +496,6 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
             collapseNotificationHandler = new Handler();
         }
 
-        // If window focus has been lost && activity is not in a paused state
-        // Its a valid check because showing of notification panel
-        // steals the focus from current activity's window, but does not
-        // 'pause' the activity
         if (!currentFocus && !isPaused) {
 
             // Post a Runnable with some delay - currently set to 300 ms
@@ -485,10 +546,6 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
                         e.printStackTrace();
                     }
 
-                    // Check if the window focus has been returned
-                    // If it hasn't been returned, post this Runnable again
-                    // Currently, the delay is 100 ms. You can change this
-                    // value to suit your needs.
                     if (!currentFocus && !isPaused) {
                         collapseNotificationHandler.postDelayed(this, 100L);
                     }
