@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -50,6 +51,7 @@ import com.yjm.applauncher.Services.RecentAppBtnService;
 import com.yjm.applauncher.passwordDialog;
 import com.yjm.applauncher.utilities.Constants;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -59,7 +61,7 @@ import java.util.List;
 public class ScreenActivity extends AppCompatActivity implements passwordDialog.EnterPasswordListener{
 
     List<AppList> list_app;
-    ArrayList<String> applist;
+    Array applist;
     RecyclerView recyclerView;
     private LinearLayout main_layout;
     private TextView select_launcher, select_launcher_description;
@@ -75,6 +77,12 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
+
+
+
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_screen);
@@ -101,7 +109,11 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
             }
         });
 
-        if(Constants.flag_setting == false) {
+        SharedPreferences prefs = getSharedPreferences(Constants.PACKAGE_NAME, 0);
+        String flag_setting = prefs.getString("flag_setting", "false");
+
+        if( flag_setting.equals("false")) {
+
             Intent intent = new Intent(ScreenActivity.this, MainActivity.class);
             finish();
             startActivity(intent);
@@ -112,6 +124,7 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
 
 
             if(!isMyAppLauncherDefault()){
+
                 select_launcher_description.setVisibility(View.VISIBLE);
                 select_launcher.setVisibility(View.VISIBLE);
 
@@ -124,8 +137,10 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
             initUI();
 
 
-            Bitmap bitmap = BitmapFactory.decodeFile(Constants.Background_file_path);
-            Toast.makeText(getApplicationContext(),"Now is " + Constants.Background_file_path, Toast.LENGTH_SHORT).show();
+            String file_path = prefs.getString("background_image_path", "0");
+
+
+            Bitmap bitmap = BitmapFactory.decodeFile(file_path);
             BitmapDrawable drawable = new BitmapDrawable(getResources(),bitmap);
             main_layout.setBackground(drawable);
 
@@ -200,11 +215,25 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
     public void initUI(){
 
 
-        applist = Constants.apps;
+
+        SharedPreferences prefs = getSharedPreferences(Constants.PACKAGE_NAME, 0);
+
+        int size = prefs.getInt("AppList" + "_size", 0);
+
+        String applist[] = new String[size];
+
+        for(int i = 0 ; i < size ; i++){
+
+            applist[i] = prefs.getString("AppList" + "_" + i, null);
+
+        }
+
+
+
 //            applist = (ArrayList<String>) getIntent().getSerializableExtra("apps");
         list_app = new ArrayList<>();
-        for(int i = 0 ; i < applist.size() ; i ++){
-            String package_name = applist.get(i);
+        for(int i = 0 ; i < applist.length ; i ++){
+            String package_name = applist[i];
 
             Drawable icon = null;
             try {
@@ -374,7 +403,11 @@ public class ScreenActivity extends AppCompatActivity implements passwordDialog.
 
     @Override
     public void applyTexts(String password) {
-        if (password.trim().equals(Constants.password)){
+
+        SharedPreferences prefs = getSharedPreferences(Constants.PACKAGE_NAME, 0);
+        String saved_password = prefs.getString("password", "password");
+
+        if (password.trim().equals(saved_password)){
             Intent intent = new Intent(ScreenActivity.this, MainActivity.class);
             finish();
             startActivity(intent);

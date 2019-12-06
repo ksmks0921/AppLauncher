@@ -3,8 +3,10 @@ package com.yjm.applauncher;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -47,7 +49,12 @@ public class ChangePasword extends AppCompatActivity {
 
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                        Constants.password = new_one.getText().toString();
+
+                                        SharedPreferences prefs = getSharedPreferences( Constants.PACKAGE_NAME, Context.MODE_PRIVATE);
+                                        SharedPreferences.Editor editor = prefs.edit();
+                                        editor.putString("password", new_one.getText().toString());
+                                        editor.commit();
+
                                         Toast.makeText(getApplicationContext(),"Successfully saved new password", Toast.LENGTH_SHORT).show();
                                         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                         startActivity(intent);

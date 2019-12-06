@@ -8,5 +8,7 @@ public class Constants {
     public static ArrayList<String> apps;
     public  static String Background_file_path;
     public static String password = "password";
+    public static String PREFS_NAME = "PREFS_NAME";
+    public static String PACKAGE_NAME = "com.yjm.applauncher";
 
 }

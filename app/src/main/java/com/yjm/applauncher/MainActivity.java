@@ -8,6 +8,7 @@ import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
@@ -34,6 +35,10 @@ public class MainActivity extends AppCompatActivity {
     private Intent intent ;
     private static final int SELECTED_PIC = 1;
     private LinearLayout background;
+
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,7 +176,18 @@ public class MainActivity extends AppCompatActivity {
                     cursor.moveToFirst();
                     int columnIndex = cursor.getColumnIndex(projection[0]);
                     String filepath = cursor.getString(columnIndex);
+
+
+
                     Constants.Background_file_path = filepath;
+
+                    SharedPreferences prefs = getSharedPreferences( Constants.PACKAGE_NAME, Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString("background_image_path", filepath);
+                    editor.commit();
+
+
+
                     cursor.close();
 
                 }

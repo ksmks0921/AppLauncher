@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -123,9 +124,30 @@ public class ListActivity extends AppCompatActivity {
                                 }
 
                                 Intent intent = new Intent(ListActivity.this, ScreenActivity.class);
-                                intent.putExtra("apps", mylist);
+
+
+
+                                SharedPreferences prefs = getSharedPreferences( Constants.PACKAGE_NAME, Context.MODE_PRIVATE);
+                                SharedPreferences.Editor editor = prefs.edit();
+
+
                                 Constants.apps = mylist;
+                                editor.putInt("AppList" +"_size", mylist.size());
+                                for(int i=0 ; i < mylist.size(); i++){
+
+                                    editor.putString("AppList" + "_" + i, mylist.get(i));
+
+                                }
+
+
+
+
+
                                 Constants.flag_setting = true;
+
+
+                                editor.putString("flag_setting", "true");
+                                editor.commit();
 //
                                 startActivity(intent);
 
