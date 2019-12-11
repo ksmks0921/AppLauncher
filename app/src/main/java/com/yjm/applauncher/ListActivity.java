@@ -284,12 +284,16 @@ public class ListActivity extends AppCompatActivity {
         //List<PackageInfo> packs = getPackageManager().getInstalledPackages(PackageManager.GET_PERMISSIONS);
         for (int i = 0; i < packs.size(); i++) {
             PackageInfo p = packs.get(i);
-            if ((!isSystemPackage(p))) {
-                String appName = p.applicationInfo.loadLabel(getPackageManager()).toString();
-                Drawable icon = p.applicationInfo.loadIcon(getPackageManager());
-                String packages = p.applicationInfo.packageName;
-                apps.add(new AppList(appName, icon, packages));
-            }
+//            if ((!isSystemPackage(p))) {
+//                String appName = p.applicationInfo.loadLabel(getPackageManager()).toString();
+//                Drawable icon = p.applicationInfo.loadIcon(getPackageManager());
+//                String packages = p.applicationInfo.packageName;
+//                apps.add(new AppList(appName, icon, packages));
+//            }
+            String appName = p.applicationInfo.loadLabel(getPackageManager()).toString();
+            Drawable icon = p.applicationInfo.loadIcon(getPackageManager());
+            String packages = p.applicationInfo.packageName;
+            apps.add(new AppList(appName, icon, packages));
         }
 
         return apps;
